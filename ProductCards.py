@@ -112,10 +112,4 @@ with open('product_cards.html', 'w') as f:
     f.write("\n".join(product_cards))
     f.write("</div></body></html>")
 
-# Save to a PDF file for sharing
-from weasyprint import HTML
-html_file_path = 'product_cards.html'
-pdf_file_path = 'product_cards.pdf'
-HTML(html_file_path).write_pdf(pdf_file_path)
-
-print("Product cards generated and saved to product_cards.html and product_cards.pdf")
+print("Product cards generated and saved to product_cards.html")
