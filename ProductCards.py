@@ -34,11 +34,21 @@ image_folder = 'images'
 pricing_data = pd.read_csv('pricing.csv')
 pricing_data.columns = pricing_data.columns.str.strip().str.lower()
 
+# Clean and convert the retailFP column to numeric format
+pricing_data['retailfp'] = pricing_data['retailfp'].replace(r'[\$,]', '', regex=True).astype(float)
+
 # Update the function to use the corrected column name
 def get_color_name(color_key):
     matching_row = pricing_data[pricing_data['itemcolorkey'].str[-3:] == color_key]
     if not matching_row.empty:
         return matching_row.iloc[0]['color']
+    return None
+
+# Ensure the retail price is properly parsed and returned as a numeric value
+def get_retail_price(item_color_key):
+    matching_row = pricing_data[pricing_data['itemcolorkey'] == item_color_key]
+    if not matching_row.empty:
+        return matching_row.iloc[0]['retailfp']
     return None
 
 # Function to generate product cards
@@ -59,12 +69,24 @@ def generate_product_cards(grouped_data, image_folder):
         # Find the image prioritizing 13-digit ItemColorKey
         image_name = f"{item_color_key}.jpg"
         if not os.path.exists(os.path.join(image_folder, image_name)):
-            # Fall back to 10-digit item code
+            # Fall back to PNG format
+            image_name = f"{item_color_key}.png"
+        if not os.path.exists(os.path.join(image_folder, image_name)):
+            # Fall back to 10-digit item code in JPG format
             image_name = f"{item_code}.jpg"
+        if not os.path.exists(os.path.join(image_folder, image_name)):
+            # Fall back to 10-digit item code in PNG format
+            image_name = f"{item_code}.png"
 
         # Check if the image exists
         if not os.path.exists(os.path.join(image_folder, image_name)):
             image_name = None  # No image available
+
+        # Update image URL to use GitHub Pages location
+        if image_name:
+            image_url = f"https://github.com/denced/OutletSale/blob/main/images/{image_name}"
+        else:
+            image_url = "https://github.com/denced/OutletSale/blob/main/images/placeholder.jpg"
 
         # Get the colorName
         color_name = get_color_name(color_key)
@@ -74,22 +96,24 @@ def generate_product_cards(grouped_data, image_folder):
         if sizes_text.lower() == 'unknown':
             sizes_text = None
 
-        # Create product card text
+        # Get the retail price
+        retail_price = get_retail_price(item_color_key)
+
+        # Use the image URL in the product card
         product_card = f"""
         <div class="product-card">
-        """
-        if image_name:
-            product_card += f"<img src='{os.path.join(image_folder, image_name)}' alt='Product Image' />"
-        product_card += f"""
-            <p>{item_model}</p>
-            <p>{item_code} - {color_key}</p>
+        <img src='{image_url}' alt='Product Image' />
+        <p>{item_model}</p>
+        <p>{item_code} - {color_key}</p>
         """
         if color_name:
             product_card += f"<p>Color: {color_name}</p>"
         if sizes_text:
             product_card += f"<p>Sizes Available: {sizes_text}</p>"
+        if retail_price:
+            product_card += f"<p>Retail Price: {retail_price}</p>"
+        product_card += f"<p>Outlet Price: {outlet_full_price}</p>"
         product_card += f"""
-            <p>Outlet Price: {outlet_full_price}</p>
             <p>- {discount}</p>
             <p>Memorial Day Sale Price: {final_outlet_price}</p>
         </div>
@@ -101,15 +125,16 @@ def generate_product_cards(grouped_data, image_folder):
 # Generate product cards
 product_cards = generate_product_cards(grouped_data, image_folder)
 
-# Save to an HTML file for sharing
-with open('product_cards.html', 'w') as f:
+# Update the file name to 'index.html'
+with open('index.html', 'w') as f:
     f.write("<html><head><style>")
     f.write(".product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; } ")
-    f.write(".product-card { border: 1px solid #ccc; padding: 16px; text-align: left; padding-left: 20px; font-family: 'Helvetica', sans-serif; font-size: 10px; line-height: 1.5; } ")
+    f.write(".product-card { border: 1px solid #ccc; padding: 16px; text-align: left; padding-left: 20px; font-family: 'Arial', sans-serif; font-size: 12px; line-height: 1.6; } ")
     f.write(".product-card img { max-width: 100%; height: auto; margin-bottom: 10px; }")
     f.write("</style></head><body>")
     f.write("<div class='product-grid'>")
     f.write("\n".join(product_cards))
     f.write("</div></body></html>")
 
-print("Product cards generated and saved to product_cards.html")
+# Update the print statement to reflect the new file name
+print("Product cards generated and saved to index.html")
