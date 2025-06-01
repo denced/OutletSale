@@ -82,11 +82,11 @@ def generate_product_cards(grouped_data, image_folder):
         if not os.path.exists(os.path.join(image_folder, image_name)):
             image_name = None  # No image available
 
-        # Update image URL to use the corrected GitHub Pages location
+        # Update image URL to use the GitHub Pages location
         if image_name:
-            image_url = f"https://media.githubusercontent.com/media/denced/OutletSale/main/images/{image_name}"
+            image_url = f"https://denced.github.io/OutletSale/images/{image_name}"
         else:
-            image_url = "https://media.githubusercontent.com/media/denced/OutletSale/main/images/placeholder.jpg"
+            image_url = "https://denced.github.io/OutletSale/images/placeholder.jpg"
 
         # Get the colorName
         color_name = get_color_name(color_key)
